@@ -74,7 +74,7 @@ namespace SerializerDictionaryToJson
                 _id = id;
                 _configurator = configurator;
                 _logger = (Logger)logger.init("SerializerDictionaryToJson");
-                this.GetConfig();
+                this.GetConfig(false);
             }
             catch (Exception ex)
             {
@@ -90,7 +90,7 @@ namespace SerializerDictionaryToJson
                 _logger.Trace("Inicio");
                 if (_configurator.hasNewConfig(_id))
                 {
-                    GetConfig();
+                    GetConfig(true);
                     _logger.Debug("Reconfiguracion exitosa");
                 }
                 Dictionary<string, object> dicPayload = (Dictionary<string, object>)payload;
@@ -123,11 +123,10 @@ namespace SerializerDictionaryToJson
                 throw ex;
             }
         }
-        private void GetConfig()
+        private void GetConfig(bool isReconfig)
         {
             try
             {
-                _dicMssgTypes.Clear(); 
                 string strConfig = _configurator.getValue("serializers", _id);
                 var serializersConfig = JsonConvert.DeserializeObject<List<SerializerConfig>>(strConfig);
                 if (serializersConfig != null)
@@ -150,6 +149,34 @@ namespace SerializerDictionaryToJson
                                         destination.publisherId = serializerConfig.mssgtypes[i].recipients[j].publisher_id;
                                         destination.recipent = serializerConfig.mssgtypes[i].recipients[j].recipient;
                                         newMssgType.destinations.Add(destination);
+                                    }
+                                }
+                                if (isReconfig)
+                                {
+                                    if (_dicMssgTypes[serializerConfig.mssgtypes[i].id].destinations.Count >= newMssgType.destinations.Count)
+                                    {
+                                        for (int index = 0; index < _dicMssgTypes[serializerConfig.mssgtypes[i].id].destinations.Count; index++)
+                                        {
+                                            if (_dicMssgTypes[serializerConfig.mssgtypes[i].id].destinations[index].publisherId == newMssgType.destinations[index].publisherId)
+                                            {
+                                                newMssgType.destinations[index].publisher = _dicMssgTypes[serializerConfig.mssgtypes[i].id].destinations[index].publisher;
+                                            }
+                                            else
+                                            {
+                                                _logger.Error("No se pudo efectuar la reconfiguracion el serializador '" + _id + "' porque hay incongluencias entre los 'recipients' actuales y los anteriores");
+                                                return;
+                                            }
+                                        }
+                                    }
+                                    else
+                                    {
+                                        _logger.Error("No se pudo efectuar la reconfiguracion el serializador '" + _id + "' porque hay incongluencias entre los 'mssgtypes' actuales y los anteriores");
+                                        return;
+                                    }
+                                    if (!_dicMssgTypes.Remove(newMssgType.id))
+                                    {
+                                        _logger.Error("No se pudo efectuar la reconfiguracion el serializador '" + _id + "' porque no se encontro un 'mssgtype' con id '" + newMssgType.id + "' en la configuracion anterior");
+                                        return;
                                     }
                                 }
                                 _dicMssgTypes.Add(newMssgType.id, newMssgType);
