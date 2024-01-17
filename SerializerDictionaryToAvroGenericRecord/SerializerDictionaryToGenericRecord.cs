@@ -315,6 +315,7 @@ namespace SerializerDictionaryToAvroGenericRecord
         {
             try
             {
+                _dicMssgTypes.Clear(); 
                 string strConfig = _configurator.getValue("serializers", _id);
                 var serializersConfig = JsonConvert.DeserializeObject<List<SerializerConfig>>(strConfig);
                 if (serializersConfig != null)
@@ -358,6 +359,11 @@ namespace SerializerDictionaryToAvroGenericRecord
             try
             {
                 _logger.Trace("Inicio");
+                if (_configurator.hasNewConfig(_id))
+                {
+                    GetConfig();
+                    _logger.Debug("Reconfiguracion exitosa");
+                }
                 Dictionary<string, object> dicPayload = (Dictionary<string, object>)payload;
 
                 var recordSchema = (RecordSchema)RecordSchema.Parse(_dicMssgTypes[mssgType].strSchemaRegistry);

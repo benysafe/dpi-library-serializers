@@ -92,6 +92,12 @@ namespace SerializerJsonToJson
             {
                 _logger.Trace("Inicio");
 
+                if (_configurator.hasNewConfig(_id))
+                {
+                    GetConfig();
+                    _logger.Debug("Reconfiguracion exitosa");
+                }
+
                 string strJson = payload.ToString();
 
                 byte[] outPayload = Encoding.UTF8.GetBytes(strJson);    //string to byte[]
@@ -124,6 +130,7 @@ namespace SerializerJsonToJson
         {
             try
             {
+                _dicMssgTypes.Clear(); 
                 string strConfig = _configurator.getValue("serializers", _id);
                 var serializersConfig = JsonConvert.DeserializeObject<List<SerializerConfig>>(strConfig);
                 if (serializersConfig != null)

@@ -88,6 +88,11 @@ namespace SerializerDictionaryToJson
             try
             {
                 _logger.Trace("Inicio");
+                if (_configurator.hasNewConfig(_id))
+                {
+                    GetConfig();
+                    _logger.Debug("Reconfiguracion exitosa");
+                }
                 Dictionary<string, object> dicPayload = (Dictionary<string, object>)payload;
                 
                 string strJson = System.Text.Json.JsonSerializer.Serialize<Dictionary<string, object>>(dicPayload);
@@ -122,6 +127,7 @@ namespace SerializerDictionaryToJson
         {
             try
             {
+                _dicMssgTypes.Clear(); 
                 string strConfig = _configurator.getValue("serializers", _id);
                 var serializersConfig = JsonConvert.DeserializeObject<List<SerializerConfig>>(strConfig);
                 if (serializersConfig != null)

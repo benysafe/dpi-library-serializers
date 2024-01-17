@@ -88,9 +88,14 @@ namespace SerializerRawToRaw
         public void serialize(string mssgType, object payload, string priority)
         {
             try
-            {
+            {                
                 _logger.Trace("Inicio");
 
+                if(_configurator.hasNewConfig(_id))
+                {
+                    GetConfig();
+                    _logger.Debug("Reconfiguracion exitosa");
+                }
 
                 byte[] outPayload = (byte[])payload;
 
@@ -122,6 +127,7 @@ namespace SerializerRawToRaw
         {
             try
             {
+                _dicMssgTypes.Clear();
                 string strConfig = _configurator.getValue("serializers", _id);
                 var serializersConfig = JsonConvert.DeserializeObject<List<SerializerConfig>>(strConfig);
                 if (serializersConfig != null)
