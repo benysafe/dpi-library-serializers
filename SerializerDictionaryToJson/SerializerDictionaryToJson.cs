@@ -67,6 +67,41 @@ namespace SerializerDictionaryToJson
             }
         }
 
+        public void dynamicSerialize(string recipent, object payload, string priority = "NORMAL")
+        {
+            try
+            {
+                _logger.Trace("Inicio");
+                if (_configurator.hasNewConfig(_id))
+                {
+                    GetConfig(true);
+                    _logger.Debug("Reconfiguracion exitosa");
+                }
+                Dictionary<string, object> dicPayload = (Dictionary<string, object>)payload;
+
+                string strJson = System.Text.Json.JsonSerializer.Serialize<Dictionary<string, object>>(dicPayload);
+
+                byte[] outPayload = Encoding.UTF8.GetBytes(strJson);    //string to byte[]
+
+                if (priority is null)
+                {
+                    priority = "NORMAL";
+                }
+
+                foreach (KeyValuePair<string, MssgTypeStruct> entry in _dicMssgTypes)
+                {
+                    entry.Value.destinations[0].publisher.publish(recipent, outPayload, priority);
+                }
+
+                _logger.Trace("Fin");
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex.ToString());
+                throw ex;
+            }
+        }
+
         public void init(string id, IConfigurator configurator, IGenericLogger logger) 
         {
             try

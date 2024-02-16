@@ -1,5 +1,5 @@
 ﻿
-namespace SerializerRawToRaw
+namespace SerializerJsonToJson
 {
     public class SerializerConfig
     {
